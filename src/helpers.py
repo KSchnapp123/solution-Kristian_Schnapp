@@ -43,5 +43,25 @@ def todo_from_json(todo:dict) -> Todo:
         id=todo["id"],
         todo=todo["todo"],
         completed=todo["completed"],
+        status=get_status(todo["completed"]),
+        priority=get_priority(todo["userId"]),
         user_id=todo["userId"]
     )
+
+def get_status(completed):
+    if completed:
+        return "Closed"
+    else:
+        return "Open"
+    
+def get_priority(user_id):
+    match(user_id % 3):
+        case 0:
+            return "Low"
+        case 1:
+            return "Low"
+        case 2:
+            return "Medium"
+        case 3:
+            return "High"
+

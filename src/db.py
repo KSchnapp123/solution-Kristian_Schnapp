@@ -27,10 +27,6 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 async def populate_database() -> None:
-    async with httpx.AsyncClient() as client:
-        user_response = await client.get("https://dummyjson.com/users")
-        todo_response = await client.get("https://dummyjson.com/todos")
-        
 
     # Check if database is already populated
 
@@ -40,6 +36,10 @@ async def populate_database() -> None:
 
         if existing_user is not None:
             return
+
+    async with httpx.AsyncClient() as client:
+        user_response = await client.get("https://dummyjson.com/users")
+        todo_response = await client.get("https://dummyjson.com/todos")
         
     # parse users
     users_list = user_response.json().get("users",[])

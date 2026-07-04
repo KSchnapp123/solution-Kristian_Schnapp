@@ -10,7 +10,7 @@ class Base(DeclarativeBase, AsyncAttrs):
 
 class User(Base):
     __tablename__ = "users"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer,primary_key=True)
     first_name: Mapped[str] = mapped_column(String)
     last_name: Mapped[str] = mapped_column(String)
     maiden_name: Mapped[str] = mapped_column(String)
@@ -44,7 +44,9 @@ class User(Base):
 
 class Todo(Base):
     __tablename__ = "todos"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer,primary_key=True)
     todo: Mapped[str] = mapped_column(String)
     completed: Mapped[bool] = mapped_column(default=False)
+    status: Mapped[str] = mapped_column(String)
+    priority: Mapped[str] = mapped_column(String)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
