@@ -3,11 +3,12 @@ from db import create_database_and_tables, get_async_session, populate_database
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import Bundle
+from sqlalchemy.exc import IntegrityError
 from contextlib import asynccontextmanager
 from models import User, Todo
 from typing import List
-from schemas import TodoResponse, TodoResponseId
-from helpers import get_status, get_priority
+from helpers import todo_from_json, get_status, get_priority
+from schemas import TodoResponse, TodoResponseId, TodoBody, TodoPatch
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
@@ -159,16 +160,75 @@ async def get_tikets_by_status_priority(priority: str,
         raise HTTPException(status_code=404, detail="No tickets found")
 
     return todo_responses
+
+# insert new ticket
+@app.post("/tickets", response_model=TodoBody)
+async def insert_ticket(ticket: TodoBody, session:AsyncSession = Depends(get_async_session)):
+    new_ticket = {
+        "todo": ticket.todo,
+        "completed": ticket.completed,
+        "userId": ticket.userId
+    }
+
+    new_ticket_object = todo_from_json(new_ticket)
+    try:
+        session.add(new_ticket_object)
+        await session.commit()
+        return new_ticket
+    except IntegrityError:
+        raise HTTPException(status_code=500, detail=f"user with id: {ticket.userId} does not exist")
     
 
-# @app.get("/users")
-# async def get_users(session:AsyncSession = Depends(get_async_session)):
-#      result = await session.execute(select(User))
-#      return result.scalars().all()
 
-# @app.get("/todos")
-# async def get_users(session:AsyncSession = Depends(get_async_session)):
-#      result = await session.execute(select(Todo))
-#      return result.scalars().all()
+# Patch a ticket
+@app.patch("/tickets/{id}", response_model=TodoBody)
+async def patch_ticket(id: int, ticket: TodoPatch, session:AsyncSession = Depends(get_async_session)):
+    db_ticket_stmt = await session.execute(select(Todo).where(Todo.id == id))
+    db_ticket_result = db_ticket_stmt.scalar_one_or_none()
+
+    if db_ticket_result is None:
+        raise HTTPException(status_code=404, detail=f"Ticket with id: {id} not found")
+    
+    ticket_dict = ticket.model_dump(exclude_unset=True)
+
+    field_map = {
+        "todo" : "todo",
+        "completed" : "completed",
+        "userId" : "user_id"
+    }
+    
+    for key, value in ticket_dict.items():
+        orm_field = field_map[key]
+        setattr(db_ticket_result, orm_field, value)
+    
+    if "completed" in ticket_dict:
+        db_ticket_result.status = get_status(db_ticket_result.completed)
+    
+    if "userId" in ticket_dict:
+        db_ticket_result.priority = get_priority(db_ticket_result.user_id)
+    try:
+        await session.commit()
+        await session.refresh(db_ticket_result)
+    except IntegrityError:
+        raise HTTPException(status_code = 500, detail=f"User with id: {ticket_dict.get('userId' )} doesn't exist")
+    return {
+        "id": db_ticket_result.id,
+        "todo": db_ticket_result.todo,
+        "completed": db_ticket_result.completed,
+        "userId": db_ticket_result.user_id 
+
+    }
+
+
+
+@app.get("/users")
+async def get_users(session:AsyncSession = Depends(get_async_session)):
+     result = await session.execute(select(User))
+     return result.scalars().all()
+
+@app.get("/todos")
+async def get_users(session:AsyncSession = Depends(get_async_session)):
+     result = await session.execute(select(Todo))
+     return result.scalars().all()
 
 
