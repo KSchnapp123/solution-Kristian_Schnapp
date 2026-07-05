@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class TodoResponse(BaseModel):
     id: int
@@ -15,3 +16,14 @@ class TodoResponseId(BaseModel):
     assignee: str
     completed: bool
     user_id: int
+
+class TodoBody(BaseModel):
+    todo: str
+    completed: bool
+    userId: int
+
+
+class TodoPatch(BaseModel):
+    todo: Optional[str] = None
+    completed: Optional[bool] = None
+    userId: Optional[int] = None

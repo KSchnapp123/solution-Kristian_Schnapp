@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
-from sqlalchemy import select
+from sqlalchemy import select, event
 from models import Base, User
 from helpers import user_from_json
 import httpx
@@ -13,6 +13,13 @@ DATABASE_URL = "sqlite+aiosqlite:///./database.db"
 
 # creating database engine
 engine = create_async_engine(DATABASE_URL)
+
+# Enabling foreign key
+@event.listens_for(engine.sync_engine, "connect")
+def enable_foreign_keys(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 #creating async session
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
@@ -49,7 +56,7 @@ async def populate_database() -> None:
     todo_list = todo_response.json().get("todos", [])
     todo_objects = [todo_from_json(todo_json) for todo_json in todo_list]
 
-    async with async_session_maker() as session:    
+    async with async_session_maker() as session:   
         session.add_all(user_objects)
         session.add_all(todo_objects)
         await session.commit()

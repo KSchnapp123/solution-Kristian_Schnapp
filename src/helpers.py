@@ -40,7 +40,7 @@ def user_from_json(user: dict) -> User:
 
 def todo_from_json(todo:dict) -> Todo:
     return Todo(
-        id=todo["id"],
+        # id=todo["id"],
         todo=todo["todo"],
         completed=todo["completed"],
         status=get_status(todo["completed"]),

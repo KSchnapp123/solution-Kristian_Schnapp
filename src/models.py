@@ -44,9 +44,9 @@ class User(Base):
 
 class Todo(Base):
     __tablename__ = "todos"
-    id: Mapped[int] = mapped_column(Integer,primary_key=True)
+    id: Mapped[int] = mapped_column(Integer,primary_key=True, autoincrement=True)
     todo: Mapped[str] = mapped_column(String)
     completed: Mapped[bool] = mapped_column(default=False)
     status: Mapped[str] = mapped_column(String)
     priority: Mapped[str] = mapped_column(String)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
