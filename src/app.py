@@ -221,14 +221,4 @@ async def patch_ticket(id: int, ticket: TodoPatch, session:AsyncSession = Depend
 
 
 
-@app.get("/users")
-async def get_users(session:AsyncSession = Depends(get_async_session)):
-     result = await session.execute(select(User))
-     return result.scalars().all()
-
-@app.get("/todos")
-async def get_users(session:AsyncSession = Depends(get_async_session)):
-     result = await session.execute(select(Todo))
-     return result.scalars().all()
-
 

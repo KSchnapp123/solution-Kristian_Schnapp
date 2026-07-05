@@ -45,8 +45,8 @@ async def populate_database() -> None:
             return
 
     async with httpx.AsyncClient() as client:
-        user_response = await client.get("https://dummyjson.com/users")
-        todo_response = await client.get("https://dummyjson.com/todos")
+        user_response = await client.get("https://dummyjson.com/users?limit=0")
+        todo_response = await client.get("https://dummyjson.com/todos?limit=0")
         
     # parse users
     users_list = user_response.json().get("users",[])
@@ -58,5 +58,6 @@ async def populate_database() -> None:
 
     async with async_session_maker() as session:   
         session.add_all(user_objects)
+        await session.commit()
         session.add_all(todo_objects)
         await session.commit()
