@@ -1,0 +1,6 @@
+services:
+  api:
+    container_name: ticket_hub_kristian_schnapp
+    build: .
+    ports:
+      - "8000:8000"
